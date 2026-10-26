@@ -37,8 +37,6 @@ export function NotificationBell({
   useEffect(() => {
     seen.current = new Set();
     primed.current = false;
-    setLive([]);
-    setFresh([]);
 
     let stopped = false;
 

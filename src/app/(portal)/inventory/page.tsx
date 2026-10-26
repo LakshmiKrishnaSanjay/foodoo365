@@ -19,7 +19,7 @@ async function InventoryPage({ searchParams }: { searchParams: Promise<Record<st
   if (!data) return null;
   return (
     <div className="space-y-6">
-      <PageIntro title="Inventory and meals" description="The central kitchen dispatches meals to the trucks. This portal is read-only. Closing stock is opening plus receipts, minus sold, donated, wasted and returned meals, adjusted for transfers." />
+      <PageIntro title="Inventory and meals" description="The central kitchen in Thiruvananthapuram dispatches meals to the trucks. This portal is read-only. Closing stock is opening plus receipts, minus sold, donated, wasted and returned meals, adjusted for transfers." />
       <Suspense><FilterBar trucks={choices.trucks} truck={filters.truck} q={filters.q} showSearch /></Suspense>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
@@ -33,7 +33,7 @@ async function InventoryPage({ searchParams }: { searchParams: Promise<Record<st
         ].map(([label, value]) => (
           <div key={String(label)} className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
             <p className="text-xs tracking-wide text-muted-foreground uppercase">{label}</p>
-            <p className="mt-2 font-heading text-2xl tabular-nums">{Number(value).toLocaleString("en-AE")}</p>
+            <p className="mt-2 font-heading text-2xl tabular-nums">{Number(value).toLocaleString("en-IN")}</p>
           </div>
         ))}
       </div>

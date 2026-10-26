@@ -5,10 +5,14 @@ export const DEMO_START: IsoDate = "2026-05-01";
 export const DEMO_END: IsoDate = "2026-10-25";
 export const AS_OF: IsoDate = "2026-10-26";
 export const CHARITY_BPS = 2000;
-/** 5% GST, stored as basis points. */
+/** 5% GST on restaurant and food-truck meals, stored as basis points. Input tax credit is not available. */
 export const GST_BPS = 500;
-export const VAT_BPS = GST_BPS;
-export const CARD_FEE_BPS = 150;
+/** Share of eligible sales collected on UPI. UPI merchant charges are 0%. */
+export const UPI_SHARE_BPS = 7000;
+/** Share of eligible sales collected on cards. */
+export const CARD_SHARE_BPS = 3000;
+/** Card merchant fee, applied only to the card share. */
+export const CARD_FEE_BPS = 180;
 
 export function parseIso(iso: IsoDate): Date {
   return new Date(`${iso}T00:00:00.000Z`);
@@ -78,21 +82,36 @@ export function rangeCovered(from: IsoDate, to: IsoDate, dataStart: IsoDate, dat
   return from >= dataStart && to <= dataEnd && from <= to;
 }
 
+const longDate = new Intl.DateTimeFormat("en-IN", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+const shortDate = new Intl.DateTimeFormat("en-IN", {
+  day: "2-digit",
+  month: "short",
+  timeZone: "UTC",
+});
+
 export function formatLongDate(iso: IsoDate): string {
-  return new Intl.DateTimeFormat("en-AE", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(parseIso(iso));
+  return longDate.format(parseIso(iso));
 }
 
 export function formatMonth(key: string): string {
-  return new Intl.DateTimeFormat("en-AE", {
+  return new Intl.DateTimeFormat("en-IN", {
     month: "short",
     year: "numeric",
     timeZone: "UTC",
   }).format(parseIso(`${key}-01`));
+}
+
+/** Axis label for a chart bucket. A single day is DD MMM. A longer bucket shows both ends. */
+export function formatChartLabel(start: IsoDate, end: IsoDate): string {
+  if (start === end) return shortDate.format(parseIso(start));
+  if (start.endsWith("-01") && end === monthEnd(start) && start.slice(0, 7) === end.slice(0, 7)) return formatMonth(start.slice(0, 7));
+  return `${shortDate.format(parseIso(start))} – ${shortDate.format(parseIso(end))}`;
 }
 
 export function clampRange(from: IsoDate | undefined, to: IsoDate | undefined): { from: IsoDate; to: IsoDate } {

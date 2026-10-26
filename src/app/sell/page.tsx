@@ -22,7 +22,7 @@ async function SellPage() {
 
   return (
     <DeskFrame name={session.fullName} role={`Seller · truck ${truck.code}`}>
-      <SellerDesk truckName={truck.name} truckCode={truck.code} location={`${truck.location}, ${truck.emirate}`} statusNote={truck.statusNote} />
+      <SellerDesk truckName={truck.name} truckCode={truck.code} location={`${truck.location}, ${truck.district}`} statusNote={truck.statusNote} />
     </DeskFrame>
   );
 }

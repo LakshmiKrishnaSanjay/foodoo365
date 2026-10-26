@@ -113,7 +113,10 @@ export function Shell({
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    setCollapsed(window.localStorage.getItem("foodoo-sidebar") === "collapsed");
+    const stored = window.localStorage.getItem("foodoo-sidebar") === "collapsed";
+    if (!stored) return;
+    const frame = window.requestAnimationFrame(() => setCollapsed(true));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   function toggle() {
@@ -163,7 +166,7 @@ export function Shell({
             <DateFilter />
           </Suspense>
           <div className="ml-auto flex items-center gap-2">
-            <NotificationBell investorId={user.id} notices={notices} unread={unread} />
+            <NotificationBell key={user.id} investorId={user.id} notices={notices} unread={unread} />
             <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

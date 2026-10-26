@@ -6,7 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 function fils(value: unknown): Fils {
   if (typeof value === "bigint") return value;
   if (typeof value === "number" || typeof value === "string") return BigInt(value);
-  throw new Error("Expected an integer fil amount from Supabase.");
+  throw new Error("Expected an integer paise amount from Supabase.");
 }
 
 async function rows<T>(query: PromiseLike<{ data: T[] | null; error: { message: string } | null }>): Promise<T[]> {
@@ -66,13 +66,18 @@ export async function loadSupabaseWorld(): Promise<World> {
       phone: String(row.phone),
       city: String(row.city),
       joinedOn: String(row.joined_on),
+      pan: String(row.pan ?? ""),
     })),
     trucks: truckRows.map((row) => ({
       id: String(row.id),
       code: String(row.code),
       name: String(row.name),
       location: String(row.location),
-      emirate: String(row.emirate),
+      district: String(row.district ?? ""),
+      latitude: Number(row.latitude ?? 0),
+      longitude: Number(row.longitude ?? 0),
+      fssai: String(row.fssai ?? ""),
+      gstin: String(row.gstin ?? ""),
       status: row.status as World["trucks"][number]["status"],
       statusNote: String(row.status_note),
       reserveBps: Number(row.reserve_bps),

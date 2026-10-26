@@ -21,7 +21,7 @@ async function LoginPage({ searchParams }: { searchParams: Promise<Record<string
         <div className="max-w-xl py-12">
           <p className="text-xs tracking-[0.18em] text-sidebar-primary uppercase">Commercial return and social impact</p>
           <h2 className="mt-4 font-heading text-4xl leading-tight md:text-5xl">See the trucks, the earnings and the meals your investment supports.</h2>
-          <p className="mt-4 text-sm leading-7 text-sidebar-foreground/75">A central kitchen prepares meals for four trucks. Profit follows the investment agreement. Twenty percent of eligible food sales is allocated to charity, and that allocation is tracked separately from meals distributed.</p>
+          <p className="mt-4 text-sm leading-7 text-sidebar-foreground/75">A central kitchen in Thiruvananthapuram prepares meals for four trucks in Kerala. Profit follows the investment agreement. Twenty percent of eligible food sales is allocated to charity, and that allocation is tracked separately from meals distributed.</p>
         </div>
         <p className="text-xs text-sidebar-foreground/60">Demonstration environment · not actual company performance</p>
       </section>

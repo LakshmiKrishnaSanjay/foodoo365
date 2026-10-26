@@ -4,11 +4,14 @@ import {
   clampRange,
   DEMO_END,
   DEMO_START,
+  eachDate,
   firstParam,
+  formatChartLabel,
   formatLongDate,
   formatMonth,
   monthEnd,
   monthKey,
+  parseIso,
   rangeCovered,
   shiftRange,
 } from "@/lib/dates";
@@ -203,12 +206,26 @@ function rangePortfolio(scope: Scope, trucks: Truck[], from: string, to: string)
   };
 }
 
-function monthSlices(from: string, to: string): Array<{ key: string; start: string; end: string }> {
+function chartSlices(from: string, to: string): Array<{ key: string; start: string; end: string }> {
+  const days = Math.round((parseIso(to).getTime() - parseIso(from).getTime()) / 86_400_000) + 1;
   const slices: Array<{ key: string; start: string; end: string }> = [];
+  if (days > 90) {
+    let cursor = from;
+    while (cursor <= to) {
+      const end = monthEnd(cursor) < to ? monthEnd(cursor) : to;
+      slices.push({ key: monthKey(cursor), start: cursor, end });
+      cursor = addDays(end, 1);
+    }
+    return slices;
+  }
+  if (days <= 31) {
+    for (const date of eachDate(from, to)) slices.push({ key: date, start: date, end: date });
+    return slices;
+  }
   let cursor = from;
   while (cursor <= to) {
-    const end = monthEnd(cursor) < to ? monthEnd(cursor) : to;
-    slices.push({ key: monthKey(cursor), start: cursor, end });
+    const end = addDays(cursor, 6) < to ? addDays(cursor, 6) : to;
+    slices.push({ key: cursor, start: cursor, end });
     cursor = addDays(end, 1);
   }
   return slices;
@@ -377,10 +394,10 @@ export async function getOverview(investorId: string, filters: Filters) {
       .filter((payout) => payout.investorId === investorId && payout.status === "approved" && trucks.some((truck) => truck.id === payout.truckId))
       .map((payout) => payout.amount),
   );
-  const months = monthSlices(filters.from, filters.to).map((slice) => {
+  const months = chartSlices(filters.from, filters.to).map((slice) => {
     const portfolio = rangePortfolio(scope, trucks, slice.start, slice.end);
     return {
-      label: formatMonth(slice.key),
+      label: formatChartLabel(slice.start, slice.end),
       revenue: portfolio.eligible,
       profit: portfolio.distributable,
       earnings: portfolio.investorShare,
@@ -397,7 +414,7 @@ export async function getOverview(investorId: string, filters: Filters) {
       id: truck.id,
       code: truck.code,
       name: truck.name,
-      location: `${truck.location}, ${truck.emirate}`,
+      location: `${truck.location}, ${truck.district}`,
       status: truck.status,
       statusNote: truck.statusNote,
       sales: money(part?.eligibleSales ?? ZERO),
@@ -417,7 +434,7 @@ export async function getOverview(investorId: string, filters: Filters) {
       kpi("Investor earned profit", "Your contractual share of distributable profit for these dates.", current.investorShare, prior?.investorShare ?? null, filters.comparable, "gold"),
       kpi("Total profit paid out", "Payouts marked paid during the selected dates.", paid, paidPrior, filters.comparable, "positive"),
       kpi("Pending profit payout", "Approved earnings that have not been paid yet.", pending, null, false),
-      { label: "Meals sold", hint: "Meals sold by your trucks in the selected dates.", amount: null, count: current.meals.toLocaleString("en-AE"), delta: deltaFor(BigInt(current.meals), prior ? BigInt(prior.meals) : null, filters.comparable), tone: "default" as const },
+      { label: "Meals sold", hint: "Meals sold by your trucks in the selected dates.", amount: null, count: current.meals.toLocaleString("en-IN"), delta: deltaFor(BigInt(current.meals), prior ? BigInt(prior.meals) : null, filters.comparable), tone: "default" as const },
       kpi("Charity contribution attributed", "Your entitlement percentage of the 20% charity allocation.", current.attributedCharity, prior?.attributedCharity ?? null, filters.comparable, "positive"),
     ],
     months: months.map((month) => ({
@@ -480,7 +497,7 @@ export async function getInvestments(investorId: string) {
       id: investment.id,
       truckId: investment.truckId,
       truck: truck ? `Truck ${truck.code} · ${truck.name}` : "Truck",
-      location: truck ? `${truck.location}, ${truck.emirate}` : "",
+      location: truck ? `${truck.location}, ${truck.district}` : "",
       date: formatLongDate(investment.investedOn),
       amount: money(investment.amount),
       ownership: investment.ownershipBps === null ? "Not applicable" : formatBps(investment.ownershipBps),
@@ -508,7 +525,7 @@ export async function getInvestmentDetail(investorId: string, id: string) {
     id: investment.id,
     truckId: truck.id,
     truck: `Truck ${truck.code} · ${truck.name}`,
-    location: `${truck.location}, ${truck.emirate}`,
+    location: `${truck.location}, ${truck.district}`,
     status: investment.status,
     date: formatLongDate(investment.investedOn),
     amount: money(investment.amount),
@@ -614,7 +631,7 @@ export async function getTrucks(investorId: string, filters: Filters) {
       id: truck.id,
       code: truck.code,
       name: truck.name,
-      location: `${truck.location}, ${truck.emirate}`,
+      location: `${truck.location}, ${truck.district}`,
       status: truck.status,
       statusNote: truck.statusNote,
       dispatched: sum((row) => row.received),
@@ -640,11 +657,11 @@ export async function getTruckDetail(investorId: string, id: string, filters: Fi
   if (!truck) return null;
   const summary = (await getTrucks(investorId, { ...filters, truck: id }))?.[0];
   if (!summary) return null;
-  const months = monthSlices(filters.from, filters.to).map((slice) => {
+  const months = chartSlices(filters.from, filters.to).map((slice) => {
     const portfolio = rangePortfolio(scope, [truck], slice.start, slice.end);
     const stock = inventoryFor(scope, [truck], slice.start, slice.end);
     return {
-      label: formatMonth(slice.key),
+      label: formatChartLabel(slice.start, slice.end),
       sales: portfolio.eligible,
       received: stock.reduce((total, row) => total + row.received, 0),
       sold: stock.reduce((total, row) => total + row.sold, 0),
@@ -656,6 +673,10 @@ export async function getTruckDetail(investorId: string, id: string, filters: Fi
   return {
     ...summary,
     reserve: formatBps(truck.reserveBps),
+    fssai: truck.fssai,
+    gstin: truck.gstin,
+    latitude: truck.latitude,
+    longitude: truck.longitude,
     months: months.map((month) => ({
       label: month.label,
       sales: money(month.sales).chart,
@@ -720,8 +741,8 @@ export async function getSales(investorId: string, filters: Filters) {
     meals,
     average: meals > 0 ? money(mulDiv(eligible, 1n, BigInt(meals))) : money(ZERO),
     daily: [...byDay.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, amount]) => ({ label: date.slice(5), revenue: money(amount).chart })),
-    monthly: monthSlices(filters.from, filters.to).map((slice) => ({
-      label: formatMonth(slice.key),
+    monthly: chartSlices(filters.from, filters.to).map((slice) => ({
+      label: formatChartLabel(slice.start, slice.end),
       revenue: money(sumFils(sales.filter((sale) => sale.date >= slice.start && sale.date <= slice.end).map((sale) => sale.eligible))).chart,
     })),
     categories: [...byCategory.entries()].map(([name, amount]) => ({ name, value: money(amount).chart })),
@@ -854,11 +875,11 @@ export async function getCharity(investorId: string, filters: Filters) {
   const used = sumFils(uses.map((use) => use.amount));
   const meals = (status: string) => uses.filter((use) => use.status === status).reduce((total, use) => total + use.meals, 0);
   const mealCount = uses.reduce((total, use) => total + use.meals, 0);
-  const months = monthSlices(filters.from, filters.to).map((slice) => {
+  const months = chartSlices(filters.from, filters.to).map((slice) => {
     const portfolio = rangePortfolio(scope, trucks, slice.start, slice.end);
     const monthUses = uses.filter((use) => use.date >= slice.start && use.date <= slice.end);
     return {
-      label: formatMonth(slice.key),
+      label: formatChartLabel(slice.start, slice.end),
       allocated: money(portfolio.charity).chart,
       used: money(sumFils(monthUses.map((use) => use.amount))).chart,
       distributed: monthUses.filter((use) => use.status === "distributed").reduce((total, use) => total + use.meals, 0),

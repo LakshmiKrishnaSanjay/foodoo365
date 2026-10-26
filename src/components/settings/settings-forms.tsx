@@ -76,6 +76,12 @@ export function SettingsForms({ user }: { user: SessionProfile }) {
             <Input id="city" className="h-10" {...profile.register("city")} />
           </div>
         </div>
+        {user.pan ? (
+          <div className="space-y-2">
+            <Label htmlFor="pan">PAN</Label>
+            <Input id="pan" value={user.pan} disabled className="h-10 font-mono" />
+          </div>
+        ) : null}
         {(["emailAlerts", "payoutAlerts", "statementAlerts"] as const).map((key) => (
           <label key={key} className="flex items-center justify-between gap-3 text-sm">
             <span>{key === "emailAlerts" ? "Email alerts" : key === "payoutAlerts" ? "Payout alerts" : "Statement alerts"}</span>

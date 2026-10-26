@@ -1,7 +1,7 @@
 /**
  * Authoritative money type for Foodoo365.
  * Amounts are integer paise (1 INR = 100 paise) so accounting never uses
- * floating-point arithmetic. The `Fils` name is the stored minor-unit type.
+ * floating-point arithmetic.
  */
 export type Fils = bigint;
 
@@ -22,9 +22,6 @@ export function inr(rupees: number, paise = 0): Fils {
   const negative = rupees < 0 || paise < 0;
   return (negative ? -1n : 1n) * (BigInt(Math.abs(rupees)) * PAISE_PER_RUPEE + BigInt(Math.abs(paise)));
 }
-
-/** @deprecated Use inr(). Kept so existing call sites keep compiling. */
-export const aed = inr;
 
 export function absFils(amount: Fils): Fils {
   return amount < 0n ? -amount : amount;
@@ -74,11 +71,6 @@ export function formatInr(amount: Fils, options?: { signed?: boolean }): string 
 export function formatSignedInr(amount: Fils): string {
   return formatInr(amount, { signed: true });
 }
-
-/** @deprecated Use formatInr(). */
-export const formatAed = formatInr;
-/** @deprecated Use formatSignedInr(). */
-export const formatSignedAed = formatSignedInr;
 
 /** Chart axes only. Never feed this back into accounting. */
 export function toChartNumber(amount: Fils): number {

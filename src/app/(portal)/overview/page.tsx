@@ -31,7 +31,7 @@ async function OverviewPage({ searchParams }: { searchParams: Promise<Record<str
       />
       <KpiGrid items={data.kpis} />
       <div className="grid gap-4 xl:grid-cols-2">
-        <Panel title="Monthly revenue trend" description={`Eligible sales from ${data.rangeLabel}. Tax collected for the authorities is excluded.`}>
+        <Panel title="Revenue trend" description={`Eligible sales from ${data.rangeLabel}. Tax collected for the authorities is excluded. Ranges of 31 days or less are shown by day, ranges up to 90 days by week, and longer ranges by month.`}>
           <TrendChart data={data.months} series={[{ key: "revenue", name: "Eligible revenue", color: "var(--primary)" }]} />
         </Panel>
         <Panel title="Profit performance" description="Distributable profit of your trucks, after charity, costs and reserves.">
@@ -66,7 +66,7 @@ async function OverviewPage({ searchParams }: { searchParams: Promise<Record<str
                 </div>
                 <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
                   <div><dt className="text-muted-foreground">Eligible sales</dt><dd className="font-medium tabular-nums">{truck.sales.formatted}</dd></div>
-                  <div><dt className="text-muted-foreground">Meals sold</dt><dd className="font-medium tabular-nums">{truck.meals.toLocaleString("en-AE")}</dd></div>
+                  <div><dt className="text-muted-foreground">Meals sold</dt><dd className="font-medium tabular-nums">{truck.meals.toLocaleString("en-IN")}</dd></div>
                   <div><dt className="text-muted-foreground">Truck profit</dt><dd className="font-medium tabular-nums">{truck.profit.formatted}</dd></div>
                   <div><dt className="text-muted-foreground">Your entitlement</dt><dd className="font-medium text-gold">{truck.entitlement}</dd></div>
                   <div><dt className="text-muted-foreground">Your earnings</dt><dd className="font-medium tabular-nums text-gold">{truck.earnings.formatted}</dd></div>

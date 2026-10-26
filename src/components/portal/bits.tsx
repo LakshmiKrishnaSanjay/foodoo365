@@ -83,7 +83,7 @@ export function Pager({ page, pages, total, hrefFor }: { page: number; pages: nu
   if (total === 0) return null;
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-      <p className="text-muted-foreground">{total.toLocaleString("en-AE")} records · page {page} of {pages}</p>
+      <p className="text-muted-foreground">{total.toLocaleString("en-IN")} records · page {page} of {pages}</p>
       <div className="flex gap-2">
         {page > 1 ? (
           <Button variant="outline" className="h-9" asChild><Link href={hrefFor(page - 1)}>Previous</Link></Button>

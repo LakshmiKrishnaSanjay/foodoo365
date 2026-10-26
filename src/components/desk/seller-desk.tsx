@@ -78,7 +78,9 @@ export function SellerDesk({
     toast.success(`Sale ${result.ticket.saleNumber}`, { description: detail });
   }
 
-  sellRef.current = sell;
+  useEffect(() => {
+    sellRef.current = sell;
+  });
 
   useEffect(() => {
     return () => {
@@ -235,7 +237,7 @@ export function SellerDesk({
           >
             <div className="space-y-2">
               <Label htmlFor="meal-code">Meal code</Label>
-              <Input id="meal-code" value={code} onChange={(event) => setCode(event.target.value)} placeholder="FD1|A|prod-shawarma" className="h-10 font-mono" />
+              <Input id="meal-code" value={code} onChange={(event) => setCode(event.target.value)} placeholder="FD1|A|prod-porotta" className="h-10 font-mono" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="quantity">How many</Label>

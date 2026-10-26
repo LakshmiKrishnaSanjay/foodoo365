@@ -28,7 +28,7 @@ async function SalesPage({ searchParams }: { searchParams: Promise<Record<string
           ["Refunds", data.refunds.formatted],
           ["Net eligible sales", data.eligible.formatted],
           ["Charity allocation", data.charity.formatted],
-          ["Meals sold", data.meals.toLocaleString("en-AE")],
+          ["Meals sold", data.meals.toLocaleString("en-IN")],
           ["Average order value", data.average.formatted],
           ["Highest selling meal", topName],
         ].map(([label, value]) => (

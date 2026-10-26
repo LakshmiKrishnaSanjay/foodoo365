@@ -14,6 +14,7 @@ export interface SessionProfile {
   phone: string;
   city: string;
   joinedOn: string;
+  pan: string;
   emailAlerts: boolean;
   payoutAlerts: boolean;
   statementAlerts: boolean;
@@ -56,6 +57,7 @@ function profileFromInvestor(id: string): Omit<SessionProfile, "emailAlerts" | "
     phone: investor.phone,
     city: investor.city,
     joinedOn: investor.joinedOn,
+    pan: investor.pan,
   };
 }
 
@@ -74,6 +76,7 @@ export async function getSession(): Promise<SessionProfile | null> {
       phone: profile.phone,
       city: profile.city,
       joinedOn: profile.joined_on,
+      pan: String(profile.pan ?? ""),
       emailAlerts: profile.email_alerts,
       payoutAlerts: profile.payout_alerts,
       statementAlerts: profile.statement_alerts,
@@ -93,9 +96,10 @@ export async function getSession(): Promise<SessionProfile | null> {
       fullName: member.fullName,
       preferredName: member.preferredName,
       email: member.email,
-      phone: "",
+      phone: member.phone,
       city: member.city,
       joinedOn: "2026-05-01",
+      pan: "",
       emailAlerts: false,
       payoutAlerts: false,
       statementAlerts: false,

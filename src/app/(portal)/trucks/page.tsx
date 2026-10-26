@@ -47,7 +47,7 @@ async function TrucksPage({ searchParams }: { searchParams: Promise<Record<strin
                   <TableCell>{truck.name}<span className="block text-xs text-muted-foreground">{truck.location}</span></TableCell>
                   <TableCell><StatusPill status={truck.status} /></TableCell>
                   <TableCell className="tabular-nums">{truck.revenue.formatted}</TableCell>
-                  <TableCell className="tabular-nums">{truck.sold.toLocaleString("en-AE")}</TableCell>
+                  <TableCell className="tabular-nums">{truck.sold.toLocaleString("en-IN")}</TableCell>
                   <TableCell className="tabular-nums">{truck.profit.formatted}</TableCell>
                   <TableCell className="tabular-nums text-gold">{truck.earnings.formatted}</TableCell>
                   <TableCell><Button asChild size="sm" variant="outline"><Link href={`/trucks/${truck.id}${query}`}>Details</Link></Button></TableCell>
@@ -72,12 +72,12 @@ async function TrucksPage({ searchParams }: { searchParams: Promise<Record<strin
               </div>
               <p className="mt-3 text-sm text-muted-foreground">{truck.statusNote}</p>
               <dl className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
-                <Metric label="Dispatched" value={truck.dispatched.toLocaleString("en-AE")} />
-                <Metric label="Sold" value={truck.sold.toLocaleString("en-AE")} />
-                <Metric label="Charity meals" value={truck.donated.toLocaleString("en-AE")} />
-                <Metric label="Returned" value={truck.returned.toLocaleString("en-AE")} />
-                <Metric label="Wasted" value={truck.wasted.toLocaleString("en-AE")} />
-                <Metric label="Closing stock" value={truck.stock.toLocaleString("en-AE")} />
+                <Metric label="Dispatched" value={truck.dispatched.toLocaleString("en-IN")} />
+                <Metric label="Sold" value={truck.sold.toLocaleString("en-IN")} />
+                <Metric label="Charity meals" value={truck.donated.toLocaleString("en-IN")} />
+                <Metric label="Returned" value={truck.returned.toLocaleString("en-IN")} />
+                <Metric label="Wasted" value={truck.wasted.toLocaleString("en-IN")} />
+                <Metric label="Closing stock" value={truck.stock.toLocaleString("en-IN")} />
                 <Metric label="Revenue" value={truck.revenue.formatted} />
                 <Metric label="Costs" value={truck.expenses.formatted} />
                 <Metric label="Charity allocation" value={truck.charity.formatted} />

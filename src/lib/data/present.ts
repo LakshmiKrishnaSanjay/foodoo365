@@ -7,7 +7,7 @@ export interface Delta {
 
 export function formatBps(bps: number): string {
   const value = bps / 100;
-  return `${new Intl.NumberFormat("en-AE", { maximumFractionDigits: 2 }).format(value)}%`;
+  return `${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(value)}%`;
 }
 
 export function deltaFor(current: Fils, previous: Fils | null, comparable: boolean): Delta | null {

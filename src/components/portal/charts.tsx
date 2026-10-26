@@ -60,7 +60,18 @@ export function CompareBars({ data, xKey = "name", bars }: { data: Array<Record<
           <XAxis dataKey={xKey} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} axisLine={false} tickLine={false} />
           <YAxis tickFormatter={(value) => AxisTick({ value })} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} axisLine={false} tickLine={false} width={72} />
           <Tooltip formatter={(value) => money.format(Number(value))} />
-          <Legend />
+          <Legend
+            content={() => (
+              <ul className="flex flex-wrap justify-center gap-4 pt-2 text-xs text-muted-foreground">
+                {bars.map((item) => (
+                  <li key={item.key} className="flex items-center gap-1.5">
+                    <span className="inline-block size-2.5 rounded-sm" style={{ background: item.color }} />
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          />
           {bars.map((item) => (
             <Bar key={item.key} dataKey={item.key} name={item.name} fill={item.color} radius={4} />
           ))}

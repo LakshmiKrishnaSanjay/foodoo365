@@ -9,7 +9,7 @@ export async function recordSaleAction(input: { code: string; quantity: number }
   const session = await getSession();
   if (!session || session.role !== "seller" || !session.truckId) return { error: "Only the person selling from a truck can record this." };
   const parsed = parseMealCode(input.code);
-  if (!parsed) return { error: "That is not a meal QR code. It should look like FD1|A|prod-shawarma." };
+  if (!parsed) return { error: "That is not a meal QR code. It should look like FD1|A|prod-porotta." };
   const truck = trucks.find((item) => item.id === session.truckId);
   if (!truck || truck.code !== parsed.truckCode) return { error: `This QR is for truck ${parsed.truckCode}. You sell from truck ${truck?.code ?? ""}.` };
 

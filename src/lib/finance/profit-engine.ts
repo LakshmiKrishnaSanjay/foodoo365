@@ -212,7 +212,7 @@ export function calculateTruckProfit(input: ProfitEngineInput): TruckProfitResul
     },
     { step: "Cost of goods sold", detail: "Unit cost multiplied by meals sold. Unsold stock is excluded.", amount: cogs },
     { step: "Operating expenses", detail: "Approved operating costs for the period, after duplicate removal.", amount: operatingExpenses },
-    { step: "Other approved costs", detail: "Contractual costs such as card processing fees.", amount: otherCosts },
+    { step: "Other approved costs", detail: "UPI is not charged. Card processing is 1.80% of the card share of eligible sales.", amount: otherCosts },
     { step: "Operating profit", detail: "Eligible sales minus charity, food cost, operating expenses and other costs.", amount: operatingProfit },
     {
       step: "Reserves",

@@ -48,9 +48,9 @@ async function CharityPage({ searchParams }: { searchParams: Promise<Record<stri
           ["Charity funds allocated", data.allocated.formatted],
           ["Charity funds used", data.used.formatted],
           ["Remaining charity balance", data.remaining.formatted],
-          ["Meals sponsored", data.sponsored.toLocaleString("en-AE")],
-          ["Meals prepared", data.prepared.toLocaleString("en-AE")],
-          ["Meals distributed", data.distributed.toLocaleString("en-AE")],
+          ["Meals sponsored", data.sponsored.toLocaleString("en-IN")],
+          ["Meals prepared", data.prepared.toLocaleString("en-IN")],
+          ["Meals distributed", data.distributed.toLocaleString("en-IN")],
           ["Average cost per charity meal", data.average?.formatted ?? "—"],
         ].map(([label, value]) => (
           <div key={label} className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">

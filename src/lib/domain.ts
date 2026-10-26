@@ -10,6 +10,8 @@ export interface Investor {
   phone: string;
   city: string;
   joinedOn: string;
+  /** Masked PAN, as shown to the investor. */
+  pan: string;
 }
 
 export interface Truck {
@@ -17,7 +19,11 @@ export interface Truck {
   code: string;
   name: string;
   location: string;
-  emirate: string;
+  district: string;
+  latitude: number;
+  longitude: number;
+  fssai: string;
+  gstin: string;
   status: "active" | "maintenance" | "inactive";
   statusNote: string;
   reserveBps: number;

@@ -16,15 +16,15 @@ const schema = z.object({
 });
 
 const DEMOS = [
-  { name: "Amina Al Hashimi", email: "amina@demo.foodoo365.com", detail: "Investor · trucks A and B" },
-  { name: "James Okonkwo", email: "james@demo.foodoo365.com", detail: "Investor · trucks B and C" },
-  { name: "Priya Nair", email: "priya@demo.foodoo365.com", detail: "Investor · trucks C and D" },
-  { name: "Layla Hassan", email: "marina@demo.foodoo365.com", detail: "Seller · Marina Grill" },
-  { name: "Omar Farooq", email: "beach@demo.foodoo365.com", detail: "Seller · Beachside Kitchen" },
-  { name: "Noor Al Mansoori", email: "corniche@demo.foodoo365.com", detail: "Seller · Corniche Plates" },
-  { name: "Ravi Menon", email: "majaz@demo.foodoo365.com", detail: "Seller · Majaz Meals" },
-  { name: "Meera Shah", email: "admin@demo.foodoo365.com", detail: "Admin · every truck" },
-  { name: "Samir Qureshi", email: "super@demo.foodoo365.com", detail: "Super admin · every sale number" },
+  { name: "Anjali Menon", email: "anjali@demo.foodoo365.com", detail: "Investor · trucks A and B" },
+  { name: "Thomas Kurian", email: "thomas@demo.foodoo365.com", detail: "Investor · trucks B and C" },
+  { name: "Fathima Rahman", email: "fathima@demo.foodoo365.com", detail: "Investor · trucks C and D" },
+  { name: "Arjun Nair", email: "arjun@demo.foodoo365.com", detail: "Seller · Marina Grill" },
+  { name: "Shabeer Ali", email: "shabeer@demo.foodoo365.com", detail: "Seller · Beachside Kitchen" },
+  { name: "Lakshmi Pillai", email: "lakshmi@demo.foodoo365.com", detail: "Seller · Shanghumugham Plates" },
+  { name: "Joseph Varghese", email: "joseph@demo.foodoo365.com", detail: "Seller · Fort Kochi Meals" },
+  { name: "Meera Krishnan", email: "meera@demo.foodoo365.com", detail: "Admin · every truck" },
+  { name: "Suresh Kumar", email: "suresh@demo.foodoo365.com", detail: "Super admin · every sale number" },
 ];
 
 export function LoginForm({ reset }: { reset?: boolean }) {

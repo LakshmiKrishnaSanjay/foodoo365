@@ -1,6 +1,6 @@
-import { aed, applyBps, sumFils, ZERO, type Fils } from "@/lib/money";
+import { applyBps, inr, sumFils, ZERO, type Fils } from "@/lib/money";
 import { addDays, DEMO_END, DEMO_START, eachDate, isWeekend, monthEnd, monthStart } from "@/lib/dates";
-import { CHARITY_BPS, GST_BPS, CARD_FEE_BPS } from "@/lib/dates";
+import { CHARITY_BPS, GST_BPS, CARD_FEE_BPS, CARD_SHARE_BPS } from "@/lib/dates";
 import { type CogsFact, type ExpenseFact, type PeriodAdjustment, type SaleFact } from "@/lib/finance/profit-engine";
 import { deriveFinancials } from "@/lib/finance/derive";
 import type { InventoryMovement } from "@/lib/finance/inventory";
@@ -15,9 +15,9 @@ import { investments, investors, operatingCosts, productWeights, products, truck
 import { createRng, intBetween } from "@/lib/demo/rng";
 
 const TRANSFERS: Array<{ date: string; productId: string; from: string; to: string; quantity: number }> = [
-  { date: "2026-06-15", productId: "prod-falafel", from: "A", to: "B", quantity: 6 },
-  { date: "2026-08-20", productId: "prod-bowl", from: "D", to: "C", quantity: 4 },
-  { date: "2026-09-05", productId: "prod-shawarma", from: "B", to: "A", quantity: 5 },
+  { date: "2026-06-15", productId: "prod-biryani", from: "A", to: "B", quantity: 6 },
+  { date: "2026-08-20", productId: "prod-pazham", from: "D", to: "C", quantity: 4 },
+  { date: "2026-09-05", productId: "prod-porotta", from: "B", to: "A", quantity: 5 },
 ];
 
 function truckByCode(code: string) {
@@ -116,7 +116,7 @@ export function generateWorld(): World {
         const transferredIn = transferIn?.quantity ?? 0;
         const paused = truck.code === "D" && date >= "2026-10-24";
         const donated = paused ? 0 : sold > 0 ? intBetween(rng, 0, date.endsWith("-5") || date.endsWith("-2") ? 3 : 1) : 0;
-        const wasted = paused ? (product.id === "prod-shawarma" ? 1 : 0) : rng() < 0.18 ? 1 : 0;
+        const wasted = paused ? (product.id === "prod-porotta" ? 1 : 0) : rng() < 0.18 ? 1 : 0;
         const returned = !paused && rng() < 0.05 ? 1 : 0;
         const desired = 28;
         const received = Math.max(
@@ -144,11 +144,11 @@ export function generateWorld(): World {
           });
         };
         push("opening", opening, "Opening stock brought forward.");
-        push("received", received, "Dispatched from the central kitchen.");
+        push("received", received, "Dispatched from the central kitchen in Thiruvananthapuram.");
         push("sold", sold, "Meals sold.");
         push("donated", donated, "Meals issued to the charity distribution cycle.");
         push("wasted", wasted, "Spoilage written off.");
-        push("returned", returned, "Returned to the central kitchen.");
+        push("returned", returned, "Returned to the central kitchen in Thiruvananthapuram.");
         push("transferred_out", transferredOut, "Transferred to another Foodoo365 truck.");
         push("transferred_in", transferredIn, "Received from another Foodoo365 truck.");
       }
@@ -165,10 +165,11 @@ export function generateWorld(): World {
       const cost = operatingCosts[truck.code];
       const lines: Array<[string, string, number]> = [
         ["Wages", "Crew wages and supervisor cover", cost.wages],
+        ["Rent", "Pitch rent", cost.rent],
         ["Fuel", "Generator and vehicle fuel", cost.fuel],
         ["Packaging", "Packaging and service disposables", cost.packaging],
-        ["Permits", "Pitch permits and municipal fees", cost.permits],
-        ["Kitchen allocation", "Central kitchen production allocation", cost.kitchen],
+        ["Permits", "FSSAI licence and municipal pitch fees", cost.permits],
+        ["Kitchen allocation", "Thiruvananthapuram central kitchen production allocation", cost.kitchen],
         ["Maintenance", "Routine servicing", cost.maintenance],
       ];
       for (const [category, description, amount] of lines) {
@@ -179,7 +180,7 @@ export function generateWorld(): World {
           category,
           classification: "operating",
           description,
-          amount: aed(amount),
+          amount: inr(amount),
           reference: `EXP-${month.replace("-", "")}-${truck.code}-${category.slice(0, 3).toUpperCase()}`,
         });
       }
@@ -197,7 +198,7 @@ export function generateWorld(): World {
           category: "charity_allocation",
           classification: "operating",
           description: "Rejected charity posting. Charity is deducted from eligible sales and cannot be expensed again.",
-          amount: aed(500),
+          amount: inr(2000),
           reference: "EXP-202605-A-CHARITY-REJECTED",
         });
       }
@@ -209,7 +210,7 @@ export function generateWorld(): World {
           category: "Repairs",
           classification: "operating",
           description: "Refrigeration compressor replacement",
-          amount: aed(22000),
+          amount: inr(42000),
           reference: "EXP-202608-C-REP",
         });
       }
@@ -219,10 +220,20 @@ export function generateWorld(): World {
         id: `exp-${expenseNo++}`,
         truckId: truck.id,
         date: periodEnd,
+        category: "UPI processing",
+        classification: "other_cost",
+        description: "UPI payments are 70% of eligible sales. UPI merchant charges are 0%.",
+        amount: ZERO,
+        reference: `UPI-${month.replace("-", "")}-${truck.code}`,
+      });
+      expenses.push({
+        id: `exp-${expenseNo++}`,
+        truckId: truck.id,
+        date: periodEnd,
         category: "Card processing",
         classification: "other_cost",
-        description: "Card processing fees at 1.50% of eligible sales",
-        amount: applyBps(eligible, CARD_FEE_BPS),
+        description: "Card payments are 30% of eligible sales at 1.80%.",
+        amount: applyBps(applyBps(eligible, CARD_SHARE_BPS), CARD_FEE_BPS),
         reference: `FEE-${month.replace("-", "")}-${truck.code}`,
       });
       let spoilage: Fils = 0n;
@@ -253,8 +264,8 @@ export function generateWorld(): World {
       truckId: truckByCode("B").id,
       periodId: `${truckByCode("B").id}:2026-07`,
       date: "2026-08-09",
-      reason: "Municipality permit invoice for July was received after that period was finalized.",
-      distributableDelta: -aed(1450),
+      reason: "Municipal pitch invoice for July was received after that period was finalized.",
+      distributableDelta: -inr(4500),
       reference: "ADJ-2026-07-B-001",
     },
   ];
@@ -387,7 +398,7 @@ export function generateWorld(): World {
     ["A", "2026-06-12", 40, "Meal sponsorship committed for a community service day. Not yet a count of people served."],
     ["B", "2026-07-18", 30, "Sponsorship reserved for prepared meals. Distribution is tracked separately."],
     ["C", "2026-09-09", 24, "Sponsorship committed after the truck returned to full service."],
-    ["D", "2026-05-22", 36, "Sponsorship committed at Al Majaz. Distribution status is separate."],
+    ["D", "2026-05-22", 36, "Sponsorship committed at Fort Kochi Beach. Distribution status is separate."],
   ];
   for (const [code, date, meals, note] of sponsored) {
     const truck = truckByCode(code);
@@ -397,7 +408,7 @@ export function generateWorld(): World {
       date,
       status: "sponsored",
       meals,
-      amount: aed(9) * BigInt(meals),
+      amount: inr(50) * BigInt(meals),
       reference: `CHS-${date.replaceAll("-", "")}-${code}`,
       note,
     });
@@ -414,7 +425,7 @@ export function generateWorld(): World {
       date,
       status: "prepared",
       meals,
-      amount: aed(9) * BigInt(meals),
+      amount: inr(50) * BigInt(meals),
       reference: `CHP-${date.replaceAll("-", "")}-${code}`,
       note: "Meals prepared and awaiting distribution. They are not reported as people fed.",
     });
@@ -460,10 +471,10 @@ export function generateWorld(): World {
       {
         id: `ntf-${investor.id}-maint`,
         investorId: investor.id,
-        title: investor.id === investors[2].id ? "Majaz Meals is in maintenance" : "Your trucks are in service",
+        title: investor.id === investors[2].id ? "Fort Kochi Meals is in maintenance" : "Your trucks are in service",
         body:
           investor.id === investors[2].id
-            ? "Majaz Meals paused sales on 24 October for scheduled equipment service."
+            ? "Fort Kochi Meals paused sales on 24 October for scheduled equipment service."
             : "No service pause is currently recorded on the trucks in your portfolio.",
         category: "operations" as const,
         createdOn: "2026-10-24",
@@ -474,30 +485,30 @@ export function generateWorld(): World {
   });
 
   notifications.push({
-    id: "ntf-james-loss",
+    id: "ntf-thomas-loss",
     investorId: investors[1].id,
     title: "August loss will carry forward",
-    body: "Corniche Plates recorded a loss in August. Your agreement carries that loss against later distributable profit. It does not create a payout.",
+    body: "Shanghumugham Plates recorded a loss in August. Your agreement carries that loss against later distributable profit. It does not create a payout.",
     category: "statement",
     createdOn: "2026-09-08",
     href: "/profit",
     unread: true,
   });
   notifications.push({
-    id: "ntf-amina-adj",
+    id: "ntf-anjali-adj",
     investorId: investors[0].id,
     title: "July adjustment posted",
-    body: "A permit invoice for Beachside Kitchen was recorded as a controlled adjustment. The finalized July snapshot was not overwritten.",
+    body: "A municipal pitch invoice for Beachside Kitchen was recorded as a controlled adjustment. The finalized July snapshot was not overwritten.",
     category: "statement",
     createdOn: "2026-08-09",
     href: "/profit",
     unread: false,
   });
   notifications.push({
-    id: "ntf-james-adj",
+    id: "ntf-thomas-adj",
     investorId: investors[1].id,
     title: "July adjustment posted",
-    body: "A permit invoice for Beachside Kitchen was recorded as a controlled adjustment. The finalized July snapshot was not overwritten.",
+    body: "A municipal pitch invoice for Beachside Kitchen was recorded as a controlled adjustment. The finalized July snapshot was not overwritten.",
     category: "statement",
     createdOn: "2026-08-09",
     href: "/profit",
