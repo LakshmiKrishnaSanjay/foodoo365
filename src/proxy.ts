@@ -20,8 +20,7 @@ export function proxy(request: NextRequest) {
   const isPublic = PUBLIC_PATHS.has(pathname);
   const role = demoSession?.role ?? "investor";
 
-  const staffOnly = pathname === "/sell" || pathname === "/admin";
-  if (!signedIn && (isSupabaseMode() ? !isPublic : staffOnly)) {
+  if (!signedIn && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     if (pathname !== "/") url.searchParams.set("next", pathname);

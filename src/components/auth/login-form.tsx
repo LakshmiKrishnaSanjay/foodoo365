@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { loginAction } from "@/lib/auth/actions";
+import { continueAsGuestAction, loginAction } from "@/lib/auth/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,10 +41,12 @@ export function LoginForm({ reset }: { reset?: boolean }) {
       })}
     >
       <div>
-        <p className="text-xs tracking-[0.16em] text-gold uppercase">Foodoo365 access</p>
-        <h1 className="mt-2 font-heading text-4xl">Sign in</h1>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">Investors, truck sellers, and admins use the same demonstration password, <span className="font-medium text-foreground">demo-investor</span>. Customers do not sign in.</p>
+        <p className="text-xs tracking-[0.16em] text-gold uppercase">Guest access</p>
+        <h1 className="mt-2 font-heading text-4xl">Welcome</h1>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">Look around the investor portal as a guest. The figures are demonstration data. Sign in only if you want a specific investor, seller, or admin.</p>
       </div>
+      <Button type="button" className="h-10 w-full" onClick={() => void continueAsGuestAction()}>Continue as guest</Button>
+      <p className="text-center text-xs tracking-wide text-muted-foreground uppercase">or sign in</p>
       {reset && <p className="rounded-lg bg-positive/10 px-3 py-2 text-sm text-positive">Password updated for this browser. Sign in with the new password.</p>}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>

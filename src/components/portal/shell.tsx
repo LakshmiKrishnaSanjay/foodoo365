@@ -214,7 +214,7 @@ export function Shell({
                   onSelect={(event) => {
                     event.preventDefault();
                     void logoutAction().then(() => {
-                      window.location.assign("/overview");
+                      window.location.assign("/login");
                     });
                   }}
                 >

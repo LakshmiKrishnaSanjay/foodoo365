@@ -58,6 +58,12 @@ export async function loginAction(input: { email: string; password: string }) {
   return { error: "Those demo credentials were not recognized." };
 }
 
+export async function continueAsGuestAction() {
+  if (isSupabaseMode()) redirect("/login");
+  await saveSession(investors[0].id, "investor");
+  redirect("/overview");
+}
+
 export async function switchDemoInvestorAction(investorId: string) {
   if (isSupabaseMode()) return;
   const investor = investors.find((item) => item.id === investorId);

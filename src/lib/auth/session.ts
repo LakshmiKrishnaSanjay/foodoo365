@@ -85,7 +85,7 @@ export async function getSession(): Promise<SessionProfile | null> {
   const jar = await cookies();
   await connection();
   const session = open<{ purpose: "session"; exp: number; sub: string; role?: AccountRole }>(jar.get("foodoo_session")?.value, "session");
-  if (!session?.sub) return investorSession(investors[0].id, null);
+  if (!session?.sub) return null;
   const member = staffById(session.sub);
   if (member) {
     return {
