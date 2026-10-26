@@ -8,6 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SaleBoard } from "@/components/desk/sale-board";
 
+function cameraFailure(error: unknown): string {
+  const text = error instanceof Error ? `${error.name} ${error.message}` : String(error ?? "");
+  if (/notallowed|permission|denied|not supported|insecure/i.test(text)) {
+    return "The phone blocked the camera. Tap Open camera and choose Allow. If you already blocked it, tap the lock icon in the address bar and allow Camera.";
+  }
+  if (/could not start|notreadable|busy|abort/i.test(text)) {
+    return "The camera is busy. Close other apps that are using it, then tap Open camera.";
+  }
+  if (/notfound|requested device|no camera/i.test(text)) {
+    return "This browser did not offer a camera. Open the page in Chrome or Safari, or tap Scan a photo.";
+  }
+  return "The camera did not start. Tap Open camera and allow access, or tap Scan a photo.";
+}
+
 export function SellerDesk({
   truckName,
   truckCode,
@@ -21,14 +35,15 @@ export function SellerDesk({
 }) {
   const [code, setCode] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [camera, setCamera] = useState("Starting the camera…");
+  const [camera, setCamera] = useState("Tap Open camera. The phone asks for permission, and the preview stays black until you allow it.");
   const [last, setLast] = useState<{ saleNumber: string; detail: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cameraTry, setCameraTry] = useState(0);
   const quantityRef = useRef(1);
   const lastScan = useRef({ code: "", at: 0 });
   const recording = useRef(false);
+  const opening = useRef(false);
+  const scannerRef = useRef<{ isScanning: boolean; stop: () => Promise<void>; clear: () => void } | null>(null);
   const regionId = `meal-reader-${useId().replace(/:/g, "")}`;
   const fileRegionId = `${regionId}-file`;
 
@@ -38,7 +53,6 @@ export function SellerDesk({
 
   const sellRef = useRef<(raw: string) => Promise<void>>(async () => undefined);
   const scanGate = useRef({ ready: true, misses: 0 });
-  const cameraRelease = useRef<Promise<void>>(Promise.resolve());
 
   async function sell(raw: string) {
     const next = raw.trim();
@@ -67,108 +81,97 @@ export function SellerDesk({
   sellRef.current = sell;
 
   useEffect(() => {
-    let alive = true;
-    let scanner: { isScanning: boolean; stop: () => Promise<void>; clear: () => void } | null = null;
-    let starting: Promise<void> | null = null;
-    const previous = cameraRelease.current;
-    let release: () => void = () => undefined;
-    cameraRelease.current = new Promise((resolve) => {
-      release = resolve;
-    });
-
-    starting = (async () => {
-      await previous.catch(() => undefined);
-      await new Promise((resolve) => window.setTimeout(resolve, 80));
-      if (!alive) return;
-      if (!window.isSecureContext) {
-        setCamera("The camera needs localhost or https. On this computer open http://localhost:3000. A phone address such as 10.x will block the camera.");
-        return;
-      }
-      const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
-      if (!alive) return;
-      const formats = [
-        Html5QrcodeSupportedFormats.QR_CODE,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.CODE_39,
-      ];
-      const instance = new Html5Qrcode(regionId, { verbose: false, formatsToSupport: formats, useBarCodeDetectorIfSupported: true });
-      scanner = instance;
-      const cameras = await Html5Qrcode.getCameras().catch(() => []);
-      if (!alive) return;
-      const back = cameras.find((item) => /back|rear|environment/i.test(item.label));
-      const attempts: Array<string | MediaTrackConstraints> = [];
-      if (back) attempts.push(back.id);
-      for (const item of cameras) {
-        if (item.id !== back?.id) attempts.push(item.id);
-      }
-      if (attempts.length === 0) {
-        attempts.push({ facingMode: "user" });
-        attempts.push({ facingMode: "environment" });
-      }
-      let lastError: unknown = null;
-      for (const camera of attempts) {
-        if (!alive) return;
-        try {
-          await instance.start(
-            camera,
-            {
-              fps: 10,
-              qrbox: (width, height) => {
-                const size = Math.max(50, Math.floor(Math.min(width, height) * 0.82));
-                return { width: Math.min(size, width), height: Math.min(size, height) };
-              },
-            },
-            (text) => {
-              if (!scanGate.current.ready) return;
-              scanGate.current.ready = false;
-              scanGate.current.misses = 0;
-              void sellRef.current(text);
-            },
-            () => {
-              if (scanGate.current.ready) return;
-              scanGate.current.misses += 1;
-              if (scanGate.current.misses >= 8) scanGate.current.ready = true;
-            },
-          );
-          if (!alive) {
-            if (instance.isScanning) await instance.stop().catch(() => undefined);
-            return;
-          }
-          setCamera("Point the camera at the meal QR or barcode.");
-          return;
-        } catch (error) {
-          lastError = error;
-          if (instance.isScanning) await instance.stop().catch(() => undefined);
-        }
-      }
-      if (!alive) return;
-      const message = lastError instanceof Error ? lastError.message : "";
-      if (/notallowed|permission|denied/i.test(message)) {
-        setCamera("The browser blocked the camera. Allow camera access, then press Try camera again.");
-      } else if (cameras.length === 0) {
-        setCamera("No camera was found. Paste the meal code, or connect a camera and press Try camera again.");
-      } else {
-        setCamera("The camera did not start. Paste the meal code, or press Try camera again.");
-      }
-    })();
-
     return () => {
-      alive = false;
-      void starting?.catch(() => undefined).finally(async () => {
-        if (scanner?.isScanning) await scanner.stop().catch(() => undefined);
+      const scanner = scannerRef.current;
+      scannerRef.current = null;
+      if (!scanner?.isScanning) return;
+      void scanner.stop().catch(() => undefined).finally(() => {
         try {
-          scanner?.clear();
+          scanner.clear();
         } catch {
           /* The preview was already removed. */
         }
-        release();
       });
     };
-  }, [cameraTry, regionId]);
+  }, []);
+
+  function openCamera() {
+    if (!window.isSecureContext) {
+      setCamera("The camera needs https. Open https://foodoo365.vercel.app/sell in Chrome or Safari.");
+      return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCamera("This browser has no camera access. Open the page in Chrome or Safari, or tap Scan a photo.");
+      return;
+    }
+    if (opening.current) return;
+    opening.current = true;
+    setCamera("Allow the camera in the prompt.");
+    setError(null);
+    const permission = navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+    void (async () => {
+      let stream: MediaStream | null = null;
+      try {
+        stream = await permission;
+        stream.getTracks().forEach((track) => track.stop());
+        await new Promise((resolve) => window.setTimeout(resolve, 400));
+        const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
+        if (scannerRef.current?.isScanning) await scannerRef.current.stop().catch(() => undefined);
+        const instance = new Html5Qrcode(regionId, {
+          verbose: false,
+          useBarCodeDetectorIfSupported: true,
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.CODE_39,
+          ],
+        });
+        scannerRef.current = instance;
+        const attempts: MediaTrackConstraints[] = [{ facingMode: "environment" }, { facingMode: "user" }];
+        let lastError: unknown = null;
+        for (const cameraConfig of attempts) {
+          try {
+            await instance.start(
+              cameraConfig,
+              {
+                fps: 10,
+                qrbox: (width, height) => {
+                  const size = Math.max(50, Math.floor(Math.min(width, height) * 0.82));
+                  return { width: Math.min(size, width), height: Math.min(size, height) };
+                },
+              },
+              (text) => {
+                if (!scanGate.current.ready) return;
+                scanGate.current.ready = false;
+                scanGate.current.misses = 0;
+                void sellRef.current(text);
+              },
+              () => {
+                if (scanGate.current.ready) return;
+                scanGate.current.misses += 1;
+                if (scanGate.current.misses >= 8) scanGate.current.ready = true;
+              },
+            );
+            setCamera("Point the camera at the meal QR or barcode.");
+            return;
+          } catch (error) {
+            lastError = error;
+            if (instance.isScanning) await instance.stop().catch(() => undefined);
+          }
+        }
+        setCamera(cameraFailure(lastError));
+      } catch (error) {
+        stream?.getTracks().forEach((track) => track.stop());
+        setCamera(cameraFailure(error));
+      } finally {
+        opening.current = false;
+      }
+    })();
+  }
 
   return (
     <div className="space-y-8">
@@ -178,7 +181,7 @@ export function SellerDesk({
           <div id={fileRegionId} className="hidden" />
           <p className="mt-2 text-sm text-muted-foreground">{camera}</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => setCameraTry((current) => current + 1)}>Try camera again</Button>
+            <Button type="button" onClick={openCamera}>Open camera</Button>
             <Label htmlFor="meal-photo" className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border px-3 text-sm">Scan a photo</Label>
             <input
               id="meal-photo"
