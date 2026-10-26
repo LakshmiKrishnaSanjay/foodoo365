@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { recordSaleAction } from "@/lib/sales/actions";
 import { Button } from "@/components/ui/button";
@@ -25,13 +25,20 @@ export function SellerDesk({
   const [last, setLast] = useState<{ saleNumber: string; detail: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cameraTry, setCameraTry] = useState(0);
   const quantityRef = useRef(1);
   const lastScan = useRef({ code: "", at: 0 });
   const recording = useRef(false);
+  const regionId = `meal-reader-${useId().replace(/:/g, "")}`;
+  const fileRegionId = `${regionId}-file`;
 
   useEffect(() => {
     quantityRef.current = quantity;
   }, [quantity]);
+
+  const sellRef = useRef<(raw: string) => Promise<void>>(async () => undefined);
+  const scanGate = useRef({ ready: true, misses: 0 });
+  const cameraRelease = useRef<Promise<void>>(Promise.resolve());
 
   async function sell(raw: string) {
     const next = raw.trim();
@@ -57,40 +64,150 @@ export function SellerDesk({
     toast.success(`Sale ${result.ticket.saleNumber}`, { description: detail });
   }
 
+  sellRef.current = sell;
+
   useEffect(() => {
-    let scanner: { stop: () => Promise<void> } | null = null;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const { Html5Qrcode } = await import("html5-qrcode");
-        if (cancelled) return;
-        const instance = new Html5Qrcode("meal-reader");
-        scanner = instance;
-        await instance.start(
-          { facingMode: "environment" },
-          { fps: 8, qrbox: { width: 220, height: 220 } },
-          (text) => {
-            void sell(text);
-          },
-          () => undefined,
-        );
-        if (!cancelled) setCamera("Point the camera at the customer’s meal QR.");
-      } catch {
-        if (!cancelled) setCamera("This browser has no camera. Paste the meal code from the customer menu.");
+    let alive = true;
+    let scanner: { isScanning: boolean; stop: () => Promise<void>; clear: () => void } | null = null;
+    let starting: Promise<void> | null = null;
+    const previous = cameraRelease.current;
+    let release: () => void = () => undefined;
+    cameraRelease.current = new Promise((resolve) => {
+      release = resolve;
+    });
+
+    starting = (async () => {
+      await previous.catch(() => undefined);
+      await new Promise((resolve) => window.setTimeout(resolve, 80));
+      if (!alive) return;
+      if (!window.isSecureContext) {
+        setCamera("The camera needs localhost or https. On this computer open http://localhost:3000. A phone address such as 10.x will block the camera.");
+        return;
+      }
+      const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
+      if (!alive) return;
+      const formats = [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.CODE_39,
+      ];
+      const instance = new Html5Qrcode(regionId, { verbose: false, formatsToSupport: formats, useBarCodeDetectorIfSupported: true });
+      scanner = instance;
+      const cameras = await Html5Qrcode.getCameras().catch(() => []);
+      if (!alive) return;
+      const back = cameras.find((item) => /back|rear|environment/i.test(item.label));
+      const attempts: Array<string | MediaTrackConstraints> = [];
+      if (back) attempts.push(back.id);
+      for (const item of cameras) {
+        if (item.id !== back?.id) attempts.push(item.id);
+      }
+      if (attempts.length === 0) {
+        attempts.push({ facingMode: "user" });
+        attempts.push({ facingMode: "environment" });
+      }
+      let lastError: unknown = null;
+      for (const camera of attempts) {
+        if (!alive) return;
+        try {
+          await instance.start(
+            camera,
+            {
+              fps: 10,
+              qrbox: (width, height) => {
+                const size = Math.max(50, Math.floor(Math.min(width, height) * 0.82));
+                return { width: Math.min(size, width), height: Math.min(size, height) };
+              },
+            },
+            (text) => {
+              if (!scanGate.current.ready) return;
+              scanGate.current.ready = false;
+              scanGate.current.misses = 0;
+              void sellRef.current(text);
+            },
+            () => {
+              if (scanGate.current.ready) return;
+              scanGate.current.misses += 1;
+              if (scanGate.current.misses >= 8) scanGate.current.ready = true;
+            },
+          );
+          if (!alive) {
+            if (instance.isScanning) await instance.stop().catch(() => undefined);
+            return;
+          }
+          setCamera("Point the camera at the meal QR or barcode.");
+          return;
+        } catch (error) {
+          lastError = error;
+          if (instance.isScanning) await instance.stop().catch(() => undefined);
+        }
+      }
+      if (!alive) return;
+      const message = lastError instanceof Error ? lastError.message : "";
+      if (/notallowed|permission|denied/i.test(message)) {
+        setCamera("The browser blocked the camera. Allow camera access, then press Try camera again.");
+      } else if (cameras.length === 0) {
+        setCamera("No camera was found. Paste the meal code, or connect a camera and press Try camera again.");
+      } else {
+        setCamera("The camera did not start. Paste the meal code, or press Try camera again.");
       }
     })();
+
     return () => {
-      cancelled = true;
-      void scanner?.stop().catch(() => undefined);
+      alive = false;
+      void starting?.catch(() => undefined).finally(async () => {
+        if (scanner?.isScanning) await scanner.stop().catch(() => undefined);
+        try {
+          scanner?.clear();
+        } catch {
+          /* The preview was already removed. */
+        }
+        release();
+      });
     };
-  }, []);
+  }, [cameraTry, regionId]);
 
   return (
     <div className="space-y-8">
       <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <div>
-          <div id="meal-reader" className="min-h-64 overflow-hidden rounded-xl border border-border bg-black" />
+          <div id={regionId} className="meal-reader min-h-64 w-full overflow-hidden rounded-xl border border-border bg-black" />
+          <div id={fileRegionId} className="hidden" />
           <p className="mt-2 text-sm text-muted-foreground">{camera}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={() => setCameraTry((current) => current + 1)}>Try camera again</Button>
+            <Label htmlFor="meal-photo" className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border px-3 text-sm">Scan a photo</Label>
+            <input
+              id="meal-photo"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (!file) return;
+                void (async () => {
+                  const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
+                  const reader = new Html5Qrcode(fileRegionId, {
+                    verbose: false,
+                    formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.EAN_13],
+                  });
+                  try {
+                    const text = await reader.scanFile(file, false);
+                    await sellRef.current(text);
+                  } catch {
+                    setError("That photo did not contain a meal QR or barcode.");
+                  } finally {
+                    reader.clear();
+                  }
+                })();
+              }}
+            />
+          </div>
         </div>
         <div className="space-y-4">
           <div>

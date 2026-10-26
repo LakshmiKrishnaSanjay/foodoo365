@@ -137,6 +137,12 @@
   }
 }
 
+.meal-reader video {
+  width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
 @media print {
   aside, header, .no-print {
     display: none !important;
