@@ -45,7 +45,7 @@ async function TruckPage({ params, searchParams }: { params: Promise<{ id: strin
       <div className="grid gap-4 xl:grid-cols-2">
         <Panel title="Sales comparison"><CompareBars data={truck.months} xKey="label" bars={[{ key: "sales", name: "Eligible sales", color: "var(--primary)" }]} /></Panel>
         <Panel title="Inventory reconciliation" description="Meals received from the central kitchen in Thiruvananthapuram, compared with meals sold, donated, wasted and returned.">
-          <CountBars data={truck.months} bars={[{ key: "received", name: "Received", color: "var(--primary)" }, { key: "sold", name: "Sold", color: "var(--gold)" }, { key: "donated", name: "Donated", color: "var(--positive)" }]} />
+          <CountBars data={truck.months} bars={[{ key: "received", name: "Received", color: "var(--primary)" }, { key: "sold", name: "Sold", color: "var(--gold)" }, { key: "donated", name: "Donated", color: "var(--chart-3)" }]} />
         </Panel>
       </div>
       <Panel title="Product stock">

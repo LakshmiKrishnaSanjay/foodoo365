@@ -33,7 +33,7 @@ export function LoginForm({ reset }: { reset?: boolean }) {
 
   return (
     <form
-      className="w-full max-w-md space-y-5"
+      className="mx-auto flex h-full min-h-0 w-full max-w-md flex-col gap-3"
       onSubmit={form.handleSubmit(async (values) => {
         setError(null);
         const result = await loginAction(values);
@@ -41,7 +41,7 @@ export function LoginForm({ reset }: { reset?: boolean }) {
       })}
     >
       <div>
-        <p className="text-xs tracking-[0.16em] text-gold uppercase">Guest access</p>
+        <p className="text-xs tracking-[0.16em] text-ember uppercase">Guest access</p>
         <h1 className="mt-2 font-heading text-4xl">Welcome</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">Look around the investor portal as a guest. The figures are demonstration data. Sign in only if you want a specific investor, seller, or admin.</p>
       </div>
@@ -56,7 +56,7 @@ export function LoginForm({ reset }: { reset?: boolean }) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="password">Password</Label>
-          <Link href="/reset-password" className="text-sm text-primary underline-offset-4 hover:underline">Forgot password</Link>
+          <Link href="/reset-password" className="text-sm text-ember underline-offset-4 hover:underline">Forgot password</Link>
         </div>
         <Input id="password" type="password" autoComplete="current-password" className="h-10" {...form.register("password")} />
         {form.formState.errors.password && <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>}
@@ -64,9 +64,9 @@ export function LoginForm({ reset }: { reset?: boolean }) {
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="submit" className="h-10 w-full" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? "Signing in" : "Sign in"}</Button>
       <p className="text-center text-sm">
-        <Link href="/menu" className="text-primary underline-offset-4 hover:underline">Open the customer menu</Link>
+        <Link href="/menu" className="text-ember underline-offset-4 hover:underline">Open the customer menu</Link>
       </p>
-      <div className="max-h-72 space-y-2 overflow-y-auto">
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
         <p className="text-xs tracking-wide text-muted-foreground uppercase">Demo accounts</p>
         {DEMOS.map((demo) => (
           <button
@@ -86,7 +86,7 @@ export function LoginForm({ reset }: { reset?: boolean }) {
               <span className="block font-medium">{demo.name}</span>
               <span className="text-muted-foreground">{demo.detail}</span>
             </span>
-            <span className="text-primary">Enter</span>
+            <span className="text-ember">Enter</span>
           </button>
         ))}
       </div>

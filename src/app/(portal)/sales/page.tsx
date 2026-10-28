@@ -44,7 +44,7 @@ async function SalesPage({ searchParams }: { searchParams: Promise<Record<string
         <Panel title="Food category revenue"><CompareBars data={data.categories} bars={[{ key: "value", name: "Eligible revenue", color: "var(--gold)" }]} /></Panel>
         <Panel title="Truck-wise sales"><CompareBars data={data.trucks} bars={[{ key: "value", name: "Eligible revenue", color: "var(--primary)" }]} /></Panel>
       </div>
-      <Panel title="Top selling meals"><CompareBars data={data.top} bars={[{ key: "revenue", name: "Eligible revenue", color: "var(--positive)" }]} /></Panel>
+      <Panel title="Top selling meals"><CompareBars data={data.top} bars={[{ key: "revenue", name: "Eligible revenue", color: "var(--chart-3)" }]} /></Panel>
       <Panel title="Item-level sales">
         {data.table.total === 0 ? <EmptyState title="No sales match" body="Try another truck, category or date range." /> : (
           <div className="space-y-4">

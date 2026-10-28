@@ -41,7 +41,7 @@ async function OverviewPage({ searchParams }: { searchParams: Promise<Record<str
           <CompareBars data={data.months} xKey="label" bars={[{ key: "revenue", name: "Revenue", color: "var(--primary)" }, { key: "expenses", name: "Costs", color: "var(--gold)" }]} />
         </Panel>
         <Panel title="Charity contribution trend" description="Twenty percent of eligible sales, allocated in the charity ledger.">
-          <TrendChart data={data.months} series={[{ key: "charity", name: "Charity allocated", color: "var(--positive)" }]} />
+          <TrendChart data={data.months} series={[{ key: "charity", name: "Charity allocated", color: "var(--chart-3)" }]} />
         </Panel>
       </div>
       <Panel title="Truck performance comparison" description="Full truck revenue and profit. Your personal earnings are on each card below.">

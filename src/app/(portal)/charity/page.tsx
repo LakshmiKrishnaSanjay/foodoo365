@@ -64,7 +64,7 @@ async function CharityPage({ searchParams }: { searchParams: Promise<Record<stri
       </Panel>
       <div className="grid gap-4 xl:grid-cols-2">
         <Panel title="Charity contribution trend"><CompareBars data={data.months} xKey="label" bars={[{ key: "allocated", name: "Allocated", color: "var(--primary)" }, { key: "used", name: "Used", color: "var(--gold)" }]} /></Panel>
-        <Panel title="Meals distributed"><CountBars data={data.months} bars={[{ key: "distributed", name: "Distributed meals", color: "var(--positive)" }]} /></Panel>
+        <Panel title="Meals distributed"><CountBars data={data.months} bars={[{ key: "distributed", name: "Distributed meals", color: "var(--chart-3)" }]} /></Panel>
       </div>
       <Panel title="Impact history" description="Sponsored means funds or meals are committed. Prepared means meals are ready. Distributed means meals have gone out. None of these statuses is a named beneficiary.">
         {data.history.length === 0 ? <EmptyState title="No charity records" body="No utilization was recorded for these trucks and dates." /> : (
