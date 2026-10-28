@@ -41,9 +41,9 @@ export function LoginForm({ reset }: { reset?: boolean }) {
       })}
     >
       <div>
-        <p className="text-xs tracking-[0.16em] text-ember uppercase">Guest access</p>
+        
         <h1 className="mt-2 font-heading text-4xl">Welcome</h1>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">Look around the investor portal as a guest. The figures are demonstration data. Sign in only if you want a specific investor, seller, or admin.</p>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">Look around the investor portal as a guest. The figures are demonstration data. Sign in only if you want a specific investor.</p>
       </div>
       <Button type="button" className="h-10 w-full" onClick={() => void continueAsGuestAction()}>Continue as guest</Button>
       <p className="text-center text-xs tracking-wide text-muted-foreground uppercase">or sign in</p>
@@ -68,7 +68,7 @@ export function LoginForm({ reset }: { reset?: boolean }) {
       </p>
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
         <p className="text-xs tracking-wide text-muted-foreground uppercase">Demo accounts</p>
-        {DEMOS.map((demo) => (
+        {DEMOS.filter((demo) => demo.detail.startsWith("Investor")).map((demo) => (
           <button
             key={demo.email}
             type="button"
